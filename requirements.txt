@@ -1,0 +1,4 @@
+vkbottle 4.9.0
+python-dotenv 1.2.2
+ollama 0.6.2
+vk-api 11.10.0
