@@ -1,75 +1,66 @@
-import ollama
-import vk_api
-import os
-import re
-from dotenv import load_dotenv
+import sys
+from datetime import datetime
+
+# Импортируем агентов
+import writer_agent
+# import planner_agent  # Будет добавлен позже
+# import analyst_agent  # Будет добавлен позже
 
 
-# иницилизация
-load_dotenv()
-LLM_MODEL = os.getenv("LLM_MODEL") 
-GROUP_ID = int(os.getenv("GROUP_ID"))
-TOKEN = os.getenv("VK_API")
+def show_menu():
+    """Показывает главное меню."""
+    print("\n" + "="*60)
+    print("🤖 VK POSTPILOT — АВТОНОМНЫЙ SMM-БОТ")
+    print("="*60)
+    print(f"📅 Текущая дата и время: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("\nВыберите действие:")
+    print("1. 📝 Написать и опубликовать первый пост из плана")
+    print("2. 📅 Составить контент-план на неделю (скоро)")
+    print("3. 📊 Проанализировать статистику постов (скоро)")
+    print("4. 🔄 Запустить полный цикл (анализ → план → посты) (скоро)")
+    print("0. Выход")
+    print("="*60)
 
-# Логика
-def clean_markdown(text):
-    """
-    Удаляет Markdown-разметку из текста, так как ВК её не понимает.
-    Это страховка на случай, если LLM всё-таки сгенерирует звездочки.
-    """
-    # Убираем жирный текст **текст** или __текст__
-    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
-    text = re.sub(r'__(.*?)__', r'\1', text)
-    
-    # Убираем курсив *текст* или _текст_
-    text = re.sub(r'\*(.*?)\*', r'\1', text)
-    text = re.sub(r'_(.*?)_', r'\1', text)
-    
-    
-    # Убираем маркеры списков - элемент или * элемент
-    text = re.sub(r'^[\*\-]\s+', '• ', text, flags=re.MULTILINE) # Заменяем на красивый буллит
-    
-    # Убираем обратные кавычки `код`
-    text = re.sub(r'`(.*?)`', r'\1', text)
-    
-    return text.strip()
 
-def generate_post():
-    with open("primary prompt.txt", "r", encoding="utf-8") as file:
-        prompt = file.read()
-
-    response = ollama.chat(model=LLM_MODEL, messages=[{"role": "user", "content": prompt}])
-    raw_text = response['message']['content'].strip()
-    
-    # Чистим текст от возможного Markdown
-    clean_text = clean_markdown(raw_text)
-    
-    # Иногда LLM может добавить лишние кавычки в начале/конце, почистим и их
-    if clean_text.startswith('"') and clean_text.endswith('"'):
-        clean_text = clean_text[1:-1]
+def main():
+    """Главная функция — оркестратор агентов."""
+    while True:
+        show_menu()
+        choice = input("\nВведите номер команды: ").strip()
         
-    return clean_text
+        if choice == "1":
+            print("\nВыберите режим публикации:")
+            print("1. Поставить в отложку (рекомендуется)")
+            print("2. Опубликовать сразу")
+            pub_choice = input("Ваш выбор (1/2): ").strip()
+            
+            if pub_choice == "1":
+                writer_agent.write_and_publish_first_post(publish_now=False)
+            elif pub_choice == "2":
+                confirm = input("⚠️  Пост будет опубликован СЕЙЧАС. Продолжить? (да/нет): ").strip().lower()
+                if confirm == "да":
+                    writer_agent.write_and_publish_first_post(publish_now=True)
+                else:
+                    print("Отменено.")
+            else:
+                print("❌ Неверный выбор.")
+        
+        elif choice == "2":
+            print("\n🚧 Функция в разработке. Скоро здесь будет planner_agent.")
+        
+        elif choice == "3":
+            print("\n🚧 Функция в разработке. Скоро здесь будет analyst_agent.")
+        
+        elif choice == "4":
+            print("\n🚧 Функция в разработке. Скоро здесь будет полный пайплайн.")
+        
+        elif choice == "0":
+            print("\n👋 До свидания!")
+            break
+        
+        else:
+            print("\n❌ Неверная команда. Попробуйте еще раз.")
 
-def publish_post(text):
-    """Публикует пост в ВК."""
-    vk_session = vk_api.VkApi(token=TOKEN)
-    vk = vk_session.get_api()
-
-    response = vk.wall.post(owner_id=-GROUP_ID, from_group=1, message=text)
-    return response['post_id']
 
 if __name__ == "__main__":
-    print("🚀 Запуск автономного пайплайна...")
-    
-    # 1. Мозг генерирует
-    print("1. Генерирую текст...")
-    post_text = generate_post()
-    print(f"Сгенерированный текст:\n{post_text}\n")
-    
-    # 2. Руки публикуют
-    print("2. Публикую в ВКонтакте...")
-    try:
-        post_id = publish_post(post_text)
-        print(f"🎉 Готово! Пост {post_id} улетел на стену.")
-    except Exception as e:
-        print(f"Не удалось опубликовать: {e}")
+    main()

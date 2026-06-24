@@ -3,4 +3,6 @@
 .venv
 .idea
 .env
-primary prompt.txt
+primary_prompt.txt
+planner_prompt.txt
+content_plan.json
