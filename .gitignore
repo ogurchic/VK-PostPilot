@@ -3,4 +3,10 @@
 .venv
 .idea
 .env
-primary prompt.txt
+primary_prompt.txt
+planner_prompt.txt
+content_plan.json
+__pycache__/
+__pycache__
+**/__pycache__/
+last_news_id.txt
