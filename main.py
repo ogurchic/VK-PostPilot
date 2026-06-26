@@ -2,6 +2,7 @@ import sys
 from datetime import datetime
 import writer_agent
 import strategist_agent
+import news_writer_agent
 # import analyst_agent  # Будет добавлен позже
 
 
@@ -14,8 +15,9 @@ def show_menu():
     print("\nВыберите действие:")
     print("1. 📅 Составить контент-план на неделю (Стратег)")
     print("2. 📝 Написать и опубликовать первый пост из плана (Писатель)")
-    print("3. 📊 Проанализировать статистику постов (Аналитик) [Скоро]")
-    print("4. 🔄 Запустить полный цикл (Анализ → План → Посты) [Скоро]")
+    print("3. 📰 Написать новостной пост с сайта (Новостник)")
+    print("4. 📊 Проанализировать статистику постов (Аналитик) [Скоро]")
+    print("5. 🔄 Запустить полный цикл (Анализ → План → Посты) [Скоро]")
     print("0. Выход")
     print("="*60)
 
@@ -29,7 +31,7 @@ def main():
         if choice == "1":
             strategist_agent.run_strategist_agent()
 
-        if choice == "2":
+        elif choice == "2":
             print("\nВыберите режим публикации:")
             print("1. Поставить в отложку (рекомендуется)")
             print("2. Опубликовать сразу")
@@ -47,9 +49,17 @@ def main():
                 print("❌ Неверный выбор.")
         
         elif choice == "3":
+            # Запускаем Агента-Новостника
+            confirm = input("⚠️  Новостник возьмет самую свежую новость с сайта и опубликует её. Продолжить? (да/нет): ").strip().lower()
+            if confirm == "да":
+                news_writer_agent.write_and_publish_news()
+            else:
+                print("Отменено.")
+
+        elif choice == "4":
             print("\n🚧 Функция в разработке. Скоро здесь будет analyst_agent.")
         
-        elif choice == "4":
+        elif choice == "5":
             print("\n🚧 Функция в разработке. Скоро здесь будет полный пайплайн.")
         
         elif choice == "0":

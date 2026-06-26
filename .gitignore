@@ -9,3 +9,4 @@ content_plan.json
 __pycache__/
 __pycache__
 **/__pycache__/
+last_news_id.txt
