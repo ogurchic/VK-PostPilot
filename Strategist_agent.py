@@ -8,7 +8,7 @@ load_dotenv()
 LLM_MODEL = os.getenv("LLM_MODEL")
 
 def get_next_monday():
-    """Возвращает дату ближайшего понедельника."""
+    #Возвращает дату ближайшего понедельника
     today = datetime.now()
     days_ahead = 0 - today.weekday()  # Понедельник = 0
     if days_ahead <= 0:  # Если сегодня уже понедельник или позже
@@ -17,11 +17,21 @@ def get_next_monday():
     return next_monday.strftime("%Y-%m-%d")
 
 def generate_content_plan():
-    """Генерирует контент-план на неделю с помощью LLM."""
+    #Генерирует контент-план на неделю с помощью LLM
     print("🧠 Генерирую контент-план на неделю...")
     
-    with open("planner_prompt.txt", "r", encoding="utf-8") as file:
-        prompt = file.read()
+    try:
+        with open("planner_prompt.txt", "r", encoding="utf-8") as file:
+            prompt = file.read()
+    except FileNotFoundError:
+        print("❌ Файл planner_prompt.txt не найден!")
+        return None
+        
+    # 🔥 ВАЖНО: LLM плохо считают календарь. Подставляем реальные даты в конец промпта.
+    next_monday = get_next_monday()
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    date_context = f"\n\nСПРАВКА ПО ДАТАМ: Сегодня {today_str}. Ближайший понедельник — {next_monday}. Обязательно используй эти точные даты для первого дня плана и отсчитывай неделю от них."
+    prompt += date_context
     
     try:
         response = ollama.chat(
@@ -56,7 +66,7 @@ def generate_content_plan():
         return None
 
 def save_plan(plan, filename="content_plan.json"):
-    """Сохраняет контент-план в JSON файл."""
+    #Сохраняет контент-план в JSON файл.
     if not plan:
         print("❌ Нечего сохранять: план пуст.")
         return False
@@ -71,7 +81,7 @@ def save_plan(plan, filename="content_plan.json"):
         return False
 
 def display_plan(plan):
-    """Красиво выводит план в консоль."""
+    #Красиво выводит план в консоль
     if not plan:
         return
     
@@ -91,17 +101,26 @@ def display_plan(plan):
     
     print("\n" + "=" * 60)
 
-if __name__ == "__main__":
-    # Генерируем план
+def run_strategist_agent():
+    """
+    Главная функция агента. Вызывается оркестратором (main.py).
+    Генерирует, показывает и сохраняет контент-план.
+    """
+    print("\n" + "="*60)
+    print("📅 ЗАПУСК АГЕНТА-ПЛАНИРОВЩИКА")
+    print("="*60)
+    
     plan = generate_content_plan()
     
     if plan:
-        # Показываем план
-        # display_plan(plan)
-        
-        # Сохраняем в файл
+        display_plan(plan)
         save_plan(plan)
-        
-        print("\n🎉 Готово! Теперь можно генерировать посты по этому плану.")
+        print("\n🎉 Контент-план успешно создан и сохранен!")
+        return True
     else:
         print("\n❌ Не удалось сгенерировать план. Попробуйте еще раз.")
+        return False
+
+if __name__ == "__main__":
+    # Если файл запущен напрямую — выполняем основную функцию
+    run_strategist_agent()
